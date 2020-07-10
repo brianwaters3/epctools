@@ -874,6 +874,7 @@ public:
    /// @brief Default class constructor.
    EThreadEventTimer()
    {
+      m_initialized = False;
       // assign the id
       m_id = atomic_inc(m_nextid);
       m_thread = NULL;
@@ -889,6 +890,7 @@ public:
    ///
    EThreadEventTimer(Long milliseconds, Bool oneshot = False)
    {
+      m_initialized = False;
       // assign the id
       m_id = atomic_inc(m_nextid);
       m_thread = NULL;
@@ -908,7 +910,7 @@ public:
    ///
    Void destroy()
    {
-      if (m_timer != NULL)
+      if (isInitialized())
       {
          stop();
          timer_delete(m_timer);
@@ -931,7 +933,7 @@ public:
    /// 
    Void start()
    {
-      if (m_timer == NULL)
+      if (!isInitialized())
          throw EThreadTimerError_NotInitialized();
 
       struct itimerspec its;
@@ -941,11 +943,12 @@ public:
       its.it_interval.tv_nsec = m_oneshot ? 0 : its.it_value.tv_nsec;
       if (timer_settime(m_timer, 0, &its, NULL) == -1)
          throw EThreadTimerError_UnableToStart();
+      m_initialized = True;
    }
    /// @brief Stops the timer.
    Void stop()
    {
-      if (m_timer != NULL)
+      if (isInitialized())
       {
          struct itimerspec its;
          its.it_value.tv_sec = 0;  // seconds
@@ -980,7 +983,7 @@ public:
    /// The timer ID is created internally when the timer object is
    /// instantiated.
    ///
-   Bool isInitialized() { return m_timer != NULL; }
+   Bool isInitialized() { return m_initialized; }
 
 protected:
    /// @cond DOXYGEN_EXCLUDE
@@ -997,6 +1000,7 @@ protected:
 private:
    static Long m_nextid;
 
+   Bool m_initialized;
    Long m_id;
    _EThreadEventBase *m_thread;
    _EThreadEventMessageBase *m_msg;
