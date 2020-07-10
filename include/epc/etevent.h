@@ -867,6 +867,7 @@ protected:
       sev.sigev_value.sival_ptr = this;
       if (timer_create(CLOCK_REALTIME, &sev, &m_timer) == -1)
          throw EThreadTimerError_UnableToInitialize();
+      m_initialized = True;
    }
 /// @endcond
 
@@ -943,7 +944,6 @@ public:
       its.it_interval.tv_nsec = m_oneshot ? 0 : its.it_value.tv_nsec;
       if (timer_settime(m_timer, 0, &its, NULL) == -1)
          throw EThreadTimerError_UnableToStart();
-      m_initialized = True;
    }
    /// @brief Stops the timer.
    Void stop()
